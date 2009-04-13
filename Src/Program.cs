@@ -9,17 +9,21 @@ namespace RemoveEmptyDirs
     {
         static ConsoleLogger Log = new ConsoleLogger();
         static int WarningsCount = 0;
+        static bool Delete;
 
         static void Main(string[] args)
         {
             CmdLineParser parser = new CmdLineParser();
             parser.DefineDefaultHelpOptions();
+            parser.DefineOption("d", "delete", CmdOptionType.Switch, CmdOptionFlags.Optional, "If specified, all empty folders will be deleted. Otherwise, only prints the paths to all empty folders that would have been deleted.");
             parser.Parse(args);
 
             parser.ErrorIfPositionalArgsCountNot(1);
 
             var dir = new DirectoryInfo(parser.OptPositional[0]);
-            Log.Info("Scanning \"{0}\" for empty directories to delete...", dir.FullName);
+            Delete = parser.OptSwitch("delete");
+
+            Log.Info("Scanning \"{0}\" for empty directories...", dir.FullName);
             DeleteEmpty(dir);
 
             if (WarningsCount > 0)
@@ -40,8 +44,9 @@ namespace RemoveEmptyDirs
                 {
                     try
                     {
-                        dir.Delete(false);
-                        Log.Info("Deleting empty directory \"{0}\"", dir.FullName);
+                        if (Delete)
+                            dir.Delete(false);
+                        Log.Info("{1} empty directory \"{0}\"", dir.FullName, Delete ? "Deleting" : "Would delete");
                     }
                     catch (Exception e)
                     {
