@@ -9,6 +9,7 @@ namespace RemoveEmptyDirs
     {
         static ConsoleLogger Log = new ConsoleLogger();
         static int WarningsCount = 0;
+        static int EmptyCount = 0;
         static bool Delete;
 
         static void Main(string[] args)
@@ -29,7 +30,7 @@ namespace RemoveEmptyDirs
             if (WarningsCount > 0)
                 Log.Warn("There were {0} warning(s); see log for details.", WarningsCount);
 
-            Log.Info("Finished.");
+            Log.Info("Finished. There were {0} empty directories.", EmptyCount);
         }
 
         /// <summary>
@@ -37,13 +38,27 @@ namespace RemoveEmptyDirs
         /// </summary>
         static bool DeleteEmpty(DirectoryInfo path)
         {
+            DirectoryInfo[] dirs;
+            try
+            {
+                dirs = path.GetDirectories();
+            }
+            catch (Exception e)
+            {
+                Log.Warn("Could not list contents of \"{0}\", skipping. See details below.", path.FullName);
+                Log.Exception(e, LogType.Warning);
+                WarningsCount++;
+                return false;
+            }
+
             bool subdirsLeft = false;
-            foreach (var dir in path.GetDirectories())
+            foreach (var dir in dirs)
             {
                 if (DeleteEmpty(dir))
                 {
                     try
                     {
+                        EmptyCount++;
                         if (Delete)
                             dir.Delete(false);
                         Log.Info("{1} empty directory \"{0}\"", dir.FullName, Delete ? "Deleting" : "Would delete");
