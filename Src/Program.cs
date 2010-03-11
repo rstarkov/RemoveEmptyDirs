@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using RT.Util;
+using RT.Util.ExtensionMethods;
 
 namespace RemoveEmptyDirs
 {
@@ -24,13 +25,13 @@ namespace RemoveEmptyDirs
             var dir = new DirectoryInfo(parser.OptPositional[0]);
             Delete = parser.OptSwitch("delete");
 
-            Log.Info("Scanning \"{0}\" for empty directories...", dir.FullName);
+            Log.Info("Scanning \"{0}\" for empty directories...".Fmt(dir.FullName));
             DeleteEmpty(dir);
 
             if (WarningsCount > 0)
-                Log.Warn("There were {0} warning(s); see log for details.", WarningsCount);
+                Log.Warn("There were {0} warning(s); see log for details.".Fmt(WarningsCount));
 
-            Log.Info("Finished. There were {0} empty directories.", EmptyCount);
+            Log.Info("Finished. There were {0} empty directories.".Fmt(EmptyCount));
         }
 
         /// <summary>
@@ -45,7 +46,7 @@ namespace RemoveEmptyDirs
             }
             catch (Exception e)
             {
-                Log.Warn("Could not list contents of \"{0}\", skipping. See details below.", path.FullName);
+                Log.Warn("Could not list contents of \"{0}\", skipping. See details below.".Fmt(path.FullName));
                 Log.Exception(e, LogType.Warning);
                 WarningsCount++;
                 return false;
@@ -61,12 +62,12 @@ namespace RemoveEmptyDirs
                         EmptyCount++;
                         if (Delete)
                             dir.Delete(false);
-                        Log.Info("{1} empty directory \"{0}\"", dir.FullName, Delete ? "Deleting" : "Would delete");
+                        Log.Info("{1} empty directory \"{0}\"".Fmt(dir.FullName, Delete ? "Deleting" : "Would delete"));
                     }
                     catch (Exception e)
                     {
                         subdirsLeft = true;
-                        Log.Warn("Could not delete directory \"{0}\" - see exception below", dir.FullName);
+                        Log.Warn("Could not delete directory \"{0}\" - see exception below".Fmt(dir.FullName));
                         Log.Exception(e, LogType.Warning);
                         WarningsCount++;
                     }
