@@ -3,35 +3,60 @@ using System.IO;
 using System.Linq;
 using RT.Util;
 using RT.Util.ExtensionMethods;
+using RT.Util.CommandLine;
 
 namespace RemoveEmptyDirs
 {
+#pragma warning disable 649
+    [DocumentationLiteral("Finds empty directories and optionally deletes them. This includes directories which only have other empty directories inside them.")]
+    class Args : ICommandLineValidatable
+    {
+        [Option("-d"), Option("--delete")]
+        [DocumentationLiteral("If specified, all empty folders will be deleted. Otherwise, only prints the paths to all empty folders that would have been deleted.")]
+        public bool Delete;
+        [IsPositional]
+        [DocumentationLiteral("Directories to be scanned.")]
+        public string[] Directories;
+
+        public string Validate()
+        {
+            if (Directories.Length == 0)
+                return "Please specify at least one directory to scan.";
+            return null;
+        }
+    }
+#pragma warning restore 649
+
     class Program
     {
         static ConsoleLogger Log = new ConsoleLogger();
         static int WarningsCount = 0;
         static int EmptyCount = 0;
-        static bool Delete;
+        static Args Args;
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            CmdLineParser parser = new CmdLineParser();
-            parser.DefineDefaultHelpOptions();
-            parser.DefineOption("d", "delete", CmdOptionType.Switch, CmdOptionFlags.Optional, "If specified, all empty folders will be deleted. Otherwise, only prints the paths to all empty folders that would have been deleted.");
-            parser.Parse(args);
+            try
+            {
+                Args = new CommandLineParser<Args>().Parse(args);
+            }
+            catch (CommandLineParseException e)
+            {
+                e.WriteUsageInfoToConsole();
+                return 1;
+            }
 
-            parser.ErrorIfPositionalArgsCountNot(1);
-
-            var dir = new DirectoryInfo(parser.OptPositional[0]);
-            Delete = parser.OptSwitch("delete");
-
-            Log.Info("Scanning \"{0}\" for empty directories...".Fmt(dir.FullName));
-            DeleteEmpty(dir);
+            foreach (var dir in Args.Directories.Select(path => new DirectoryInfo(path)))
+            {
+                Log.Info("Scanning \"{0}\" for empty directories...".Fmt(dir.FullName));
+                DeleteEmpty(dir);
+            }
 
             if (WarningsCount > 0)
                 Log.Warn("There were {0} warning(s); see log for details.".Fmt(WarningsCount));
 
             Log.Info("Finished. There were {0} empty directories.".Fmt(EmptyCount));
+            return 0;
         }
 
         /// <summary>
@@ -60,9 +85,9 @@ namespace RemoveEmptyDirs
                     try
                     {
                         EmptyCount++;
-                        if (Delete)
+                        if (Args.Delete)
                             dir.Delete(false);
-                        Log.Info("{1} empty directory \"{0}\"".Fmt(dir.FullName, Delete ? "Deleting" : "Would delete"));
+                        Log.Info("{1} empty directory \"{0}\"".Fmt(dir.FullName, Args.Delete ? "Deleting" : "Would delete"));
                     }
                     catch (Exception e)
                     {
