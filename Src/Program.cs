@@ -11,7 +11,7 @@ namespace RemoveEmptyDirs
     [DocumentationLiteral("Finds empty directories and optionally deletes them. This includes directories which only have other empty directories inside them.")]
     class Args : ICommandLineValidatable
     {
-        [Option("-d"), Option("--delete")]
+        [Option("-d", "--delete")]
         [DocumentationLiteral("If specified, all empty folders will be deleted. Otherwise, only prints the paths to all empty folders that would have been deleted.")]
         public bool Delete;
         [IsPositional]
