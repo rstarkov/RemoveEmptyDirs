@@ -14,6 +14,11 @@ namespace RemoveEmptyDirs
         [Option("-d", "--delete")]
         [DocumentationLiteral("If specified, all empty folders will be deleted. Otherwise, only prints the paths to all empty folders that would have been deleted.")]
         public bool Delete;
+
+        [Option("-f", "--force-readonly")]
+        [DocumentationLiteral("If specified, empty directories marked as read-only will also be deleted.")]
+        public bool ForceReadonly;
+
         [IsPositional]
         [DocumentationLiteral("Directories to be scanned.")]
         public string[] Directories;
@@ -82,19 +87,37 @@ namespace RemoveEmptyDirs
             {
                 if (DeleteEmpty(dir))
                 {
+                    EmptyCount++;
+                    retry:
                     try
                     {
-                        EmptyCount++;
                         if (Args.Delete)
                             dir.Delete(false);
                         Log.Info("{1} empty directory \"{0}\"".Fmt(dir.FullName, Args.Delete ? "Deleting" : "Would delete"));
                     }
                     catch (Exception e)
                     {
-                        subdirsLeft = true;
-                        Log.Warn("Could not delete directory \"{0}\" - see exception below".Fmt(dir.FullName));
-                        Log.Exception(e, LogType.Warning);
-                        WarningsCount++;
+                        if (dir.Attributes.HasFlag(FileAttributes.ReadOnly))
+                        {
+                            if (Args.ForceReadonly)
+                            {
+                                dir.Attributes = dir.Attributes & ~FileAttributes.ReadOnly;
+                                goto retry;
+                            }
+                            else
+                            {
+                                Log.Warn("Skipping empty directory \"{0}\" because it is read-only. Use -f to force deletion.".Fmt(dir.FullName));
+                                subdirsLeft = true;
+                                WarningsCount++;
+                            }
+                        }
+                        else
+                        {
+                            subdirsLeft = true;
+                            Log.Warn("Could not delete directory \"{0}\" - see exception below".Fmt(dir.FullName));
+                            Log.Exception(e, LogType.Warning);
+                            WarningsCount++;
+                        }
                     }
                 }
                 else
