@@ -2,8 +2,9 @@
 using System.IO;
 using System.Linq;
 using RT.Util;
-using RT.Util.ExtensionMethods;
 using RT.Util.CommandLine;
+using RT.Util.Consoles;
+using RT.Util.ExtensionMethods;
 
 namespace RemoveEmptyDirs
 {
@@ -23,7 +24,7 @@ namespace RemoveEmptyDirs
         [DocumentationLiteral("Directories to be scanned.")]
         public string[] Directories;
 
-        public string Validate()
+        public ConsoleColoredString Validate()
         {
             if (Directories.Length == 0)
                 return "Please specify at least one directory to scan.";
