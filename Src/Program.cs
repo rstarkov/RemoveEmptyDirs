@@ -44,7 +44,7 @@ namespace RemoveEmptyDirs
         {
             try
             {
-                Args = CommandLineParser<Args>.Parse(args);
+                Args = CommandLineParser.Parse<Args>(args);
             }
             catch (CommandLineParseException e)
             {
