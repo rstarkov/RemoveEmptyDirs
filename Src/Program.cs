@@ -6,7 +6,7 @@ using RT.Util.ExtensionMethods;
 namespace RemoveEmptyDirs;
 
 #pragma warning disable 649
-[DocumentationLiteral("Finds empty directories and optionally deletes them. This includes directories which only have other empty directories inside them.")]
+[DocumentationLiteral("Finds empty directories and optionally deletes them. This includes directories which only have other empty directories inside them.\n\nVersion [dev]")]
 class Args : ICommandLineValidatable
 {
     [Option("-d", "--delete")]
